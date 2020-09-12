@@ -67,6 +67,7 @@ public class UDPServer {
                 switch (tipo) {
                     case "datosEstacion":
                         Estacion e = Estacion.strToObj(datoRecibido);
+                        estaciones.add(e);
                         break;
                     case "temperaturaCiudad":
                         Estacion este=null;
