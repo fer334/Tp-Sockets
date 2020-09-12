@@ -2,12 +2,18 @@ package py.una.server.udp;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.crypto.Data;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import py.una.bd.PersonaDAO;
 import py.una.entidad.Cotizacion;
 import py.una.entidad.CotizacionJSON;
+import py.una.entidad.Estacion;
 import py.una.entidad.Persona;
 import py.una.entidad.PersonaJSON;
 
@@ -19,6 +25,7 @@ public class UDPServer {
         // Variables
         int puertoServidor = 9876;
         PersonaDAO pdao = new PersonaDAO();
+        ArrayList<Estacion> estaciones= new ArrayList<Estacion>();
         
         try {
             //1) Creamos el socket Servidor de Datagramas (UDP)
@@ -52,16 +59,48 @@ public class UDPServer {
                 datoRecibido = datoRecibido.trim();
                 System.out.println("DatoRecibido: " + datoRecibido );
 
+                JSONParser parser = new JSONParser();
+                Object obj = parser.parse(datoRecibido.trim());
+                JSONObject jsonObject = (JSONObject) obj;
+                String tipo = (String)jsonObject.get("tipo");
+                
+                switch (tipo) {
+                    case "datosEstacion":
+                        Estacion e = Estacion.strToObj(datoRecibido);
+                        break;
+                    case "temperaturaCiudad":
+                        Estacion este=null;
+                        for (Estacion est : estaciones) {
+                            if (est.ciudad==(String)jsonObject.get("ciudad")){
+                                este = est;
+                                break;
+                            }
+                        }
+                        if(este != null){
+                            sendData= Estacion.objToString(este).getBytes();
+                        }
+
+                    case "temperaturaDia":
+                        Estacion elegido = null;
+                        for (Estacion est : estaciones) {
+                            if (est.ciudad == (String) jsonObject.get("fecha")) {
+                                elegido = est;
+                                break;
+                            }
+                        }
+                        if (elegido != null) {
+                            sendData = Estacion.objToString(elegido).getBytes();
+                        }
+                    default:
+                        break;
+                }
+
                 Cotizacion c = CotizacionJSON.strToObj(datoRecibido);
 
                 InetAddress IPAddress = receivePacket.getAddress();
 
                 int port = receivePacket.getPort();
-
-                System.out.println("De : " + IPAddress + ":" + port);
-                System.out.println("Cotizacion Recibida: Tipo " + c.tipo+" , venta: "+c.venta+" , compra "+ c.compra );
-
-                sendData = CotizacionJSON.objToString(c).getBytes();
+                
                 DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
 
                 serverSocket.send(sendPacket);

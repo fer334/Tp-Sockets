@@ -1,11 +1,14 @@
 package py.una.server.udp;
 
-
 import java.io.*;
 import java.net.*;
+import java.nio.CharBuffer;
+
+import org.json.simple.JSONObject;
 
 import py.una.entidad.Cotizacion;
 import py.una.entidad.CotizacionJSON;
+import py.una.entidad.Estacion;
 import py.una.entidad.Persona;
 import py.una.entidad.PersonaJSON;
 
@@ -15,7 +18,7 @@ class UDPClient {
 
        
         // Datos necesario
-        String direccionServidor = "127.0.0.0";
+        String direccionServidor = "127.0.0.1";
 
         if (a.length > 0) {
             direccionServidor = a[0];
@@ -35,17 +38,59 @@ class UDPClient {
 
             byte[] sendData = new byte[1024];
             byte[] receiveData = new byte[1024];
+            String datoPaquete="";
 
-            System.out.print("Ingrese el tipo de cotizacion ej:dolar: ");
-            String tipo = inFromUser.readLine();
-            System.out.print("Ingrese el valor de la venta: ");
-            Long venta = Long.parseLong(inFromUser.readLine());
-            System.out.print("Ingrese el valor de la compra: ");
-            Long compra = Long.parseLong(inFromUser.readLine());
+            System.out.println("Que tipo de operacion quiere realizar:");
+            System.out.println("a- Enviar datos de sensores meteorológicos");
+            System.out.println("b- Consultar la temperatura en una ciudad");
+            System.out.println("c- Consultar la temperatura promedio en un dia.");
+            System.out.println("Seleccione una opcion: ");
+
+			switch (inFromUser.readLine()) {
+                case "a":
+                //  (id_estacion, ciudad, porcentaje_humedad, temperatura, velocidad_viento, fecha, hora)
+                    System.out.print("Ingrese el id de la estacion: ");
+                    Long id_estacion = Long.parseLong(inFromUser.readLine());
+                    System.out.print("Ingrese el nombre ciudad: ");
+                    String ciudad = inFromUser.readLine();
+                    System.out.print("Ingrese el porcentaje de humedad(numerico): ");
+                    Long porcentaje_humedad = Long.parseLong(inFromUser.readLine());
+                    System.out.print("Ingrese la temperatura(numerico): ");
+                    Long temperatura = Long.parseLong(inFromUser.readLine());
+                    System.out.print("Ingrese la velocidad viento(numerico): ");
+                    Long velocidad_viento = Long.parseLong(inFromUser.readLine());
+                    System.out.print("Ingrese la fecha: ");
+                    String fecha = inFromUser.readLine();
+                    System.out.print("Ingrese la hora: ");
+                    String hora = inFromUser.readLine();
+
+                    Estacion e = new Estacion(id_estacion, ciudad, porcentaje_humedad, temperatura, velocidad_viento,fecha, hora);
+
+                    datoPaquete = Estacion.objToString(e);
+
+                    break;
+                case "b":
+                    System.out.print("Ingrese el nombre ciudad: ");
+                    String ciudad_consulta = inFromUser.readLine();
+                    final JSONObject obj = new JSONObject();
+                    obj.put("ciudad", ciudad_consulta);
+                    obj.put("tipo", "temperaturaCiudad");
+                    datoPaquete = obj.toJSONString();
+                    
+                    break;
+                case "c":
+                    System.out.print("Ingrese una fecha para obtener el promedio de ese dia: ");
+                    String fecha_consulta = inFromUser.readLine();
+                    final JSONObject obj1 = new JSONObject();
+                    obj1.put("fecha", fecha_consulta);
+                    obj1.put("tipo", "temperaturaDia");
+                    datoPaquete = obj1.toJSONString();
+                    break;
             
-            Cotizacion c = new Cotizacion(tipo,compra,venta);
-            
-            String datoPaquete = CotizacionJSON.objToString(c); 
+                default:
+                    break;
+            }
+
             sendData = datoPaquete.getBytes();
 
             System.out.println("Enviar " + datoPaquete + " al servidor. ("+ sendData.length + " bytes)");
