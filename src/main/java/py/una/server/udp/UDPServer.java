@@ -3,7 +3,11 @@ package py.una.server.udp;
 import java.io.*;
 import java.net.*;
 
+import javax.xml.crypto.Data;
+
 import py.una.bd.PersonaDAO;
+import py.una.entidad.Cotizacion;
+import py.una.entidad.CotizacionJSON;
 import py.una.entidad.Persona;
 import py.una.entidad.PersonaJSON;
 
@@ -47,34 +51,20 @@ public class UDPServer {
                 String datoRecibido = new String(receivePacket.getData());
                 datoRecibido = datoRecibido.trim();
                 System.out.println("DatoRecibido: " + datoRecibido );
-                Persona p = PersonaJSON.stringObjeto(datoRecibido);
+
+                Cotizacion c = CotizacionJSON.strToObj(datoRecibido);
 
                 InetAddress IPAddress = receivePacket.getAddress();
 
                 int port = receivePacket.getPort();
 
                 System.out.println("De : " + IPAddress + ":" + port);
-                System.out.println("Persona Recibida : " + p.getCedula() + ", " + p.getNombre() + " " + p.getApellido());
-                
-                try {
-                	pdao.insertar(p);
-                	System.out.println("Persona insertada exitosamente en la Base de datos");
-                }catch(Exception e) {
-                	System.out.println("Persona NO insertada en la Base de datos, razón: " + e.getLocalizedMessage());
-                }
-                
-                // Respondemos agregando a la persona una asignatura
-                p.getAsignaturas().add("Algoritmos y Estructuras de datos 2");
-                p.getAsignaturas().add("Redes de Computadoras 2");
+                System.out.println("Cotizacion Recibida: Tipo " + c.tipo+" , venta: "+c.venta+" , compra "+ c.compra );
 
-                // Enviamos la respuesta inmediatamente a ese mismo cliente
-                // Es no bloqueante
-                sendData = PersonaJSON.objetoString(p).getBytes();
-                DatagramPacket sendPacket =
-                        new DatagramPacket(sendData, sendData.length, IPAddress,port);
+                sendData = CotizacionJSON.objToString(c).getBytes();
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
 
                 serverSocket.send(sendPacket);
-
             }
 
         } catch (Exception ex) {

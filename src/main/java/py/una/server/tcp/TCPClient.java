@@ -13,7 +13,7 @@ public class TCPClient {
         BufferedReader in = null;
 
         try {
-            unSocket = new Socket("192.168.43.36", 4444);
+            unSocket = new Socket("127.0.0.0", 4444);
             // enviamos nosotros
             out = new PrintWriter(unSocket.getOutputStream(), true);
 

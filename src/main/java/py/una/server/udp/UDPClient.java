@@ -4,6 +4,8 @@ package py.una.server.udp;
 import java.io.*;
 import java.net.*;
 
+import py.una.entidad.Cotizacion;
+import py.una.entidad.CotizacionJSON;
 import py.una.entidad.Persona;
 import py.una.entidad.PersonaJSON;
 
@@ -11,9 +13,9 @@ class UDPClient {
 
     public static void main(String a[]) throws Exception {
 
-        for(int i=50090; i<50900;i++){
+       
         // Datos necesario
-        String direccionServidor = "192.168.43.36";
+        String direccionServidor = "127.0.0.0";
 
         if (a.length > 0) {
             direccionServidor = a[0];
@@ -34,27 +36,16 @@ class UDPClient {
             byte[] sendData = new byte[1024];
             byte[] receiveData = new byte[1024];
 
-            System.out.print("Ingrese el número de cédula (debe ser numérico): ");
-            //String strcedula = inFromUser.readLine();
-            String strcedula = Integer.toString(i++);
-
-            Long cedula = 0L;
-            try {
-            	cedula = Long.parseLong(strcedula);
-            }catch(Exception e1) {
-            	
-            }
+            System.out.print("Ingrese el tipo de cotizacion ej:dolar: ");
+            String tipo = inFromUser.readLine();
+            System.out.print("Ingrese el valor de la venta: ");
+            Long venta = Long.parseLong(inFromUser.readLine());
+            System.out.print("Ingrese el valor de la compra: ");
+            Long compra = Long.parseLong(inFromUser.readLine());
             
-            System.out.print("Ingrese el nombre: ");
-//            String nombre = inFromUser.readLine();
-            String nombre = "dfsa";
-            System.out.print("Ingrese el apellido: ");
-//            String apellido = inFromUser.readLine();
-            String apellido = "dsadsag";
+            Cotizacion c = new Cotizacion(tipo,compra,venta);
             
-            Persona p = new Persona(cedula, nombre, apellido);
-            
-            String datoPaquete = PersonaJSON.objetoString(p); 
+            String datoPaquete = CotizacionJSON.objToString(c); 
             sendData = datoPaquete.getBytes();
 
             System.out.println("Enviar " + datoPaquete + " al servidor. ("+ sendData.length + " bytes)");
@@ -74,19 +65,20 @@ class UDPClient {
             try {
                 // ESPERAMOS LA RESPUESTA, BLOQUENTE
                 clientSocket.receive(receivePacket);
+                System.out.println("servidor: recibido ok!!!");
 
-                String respuesta = new String(receivePacket.getData());
-                Persona presp = PersonaJSON.stringObjeto(respuesta.trim());
+                // String respuesta = new String(receivePacket.getData());
+                // Cotizacion c = CotizacionJSON.strToObj(respuesta.trim());
                 
-                InetAddress returnIPAddress = receivePacket.getAddress();
-                int port = receivePacket.getPort();
+                // InetAddress returnIPAddress = receivePacket.getAddress();
+                // int port = receivePacket.getPort();
 
-                System.out.println("Respuesta desde =  " + returnIPAddress + ":" + port);
-                System.out.println("Asignaturas: ");
+                // System.out.println("Respuesta desde =  " + returnIPAddress + ":" + port);
+                // System.out.println("Asignaturas: ");
                 
-                for(String tmp: presp.getAsignaturas()) {
-                	System.out.println(" -> " +tmp);
-                }
+                // for(String tmp: presp.getAsignaturas()) {
+                // 	System.out.println(" -> " +tmp);
+                // }
                 
 
             } catch (SocketTimeoutException ste) {
@@ -99,7 +91,7 @@ class UDPClient {
         } catch (IOException ex) {
             System.err.println(ex);
         }
-        }
+        
     }
 } 
 
